@@ -24,3 +24,18 @@
     "updatedAt": "2026-01-06"
   }
 ]
+
+{
+  "id": "equine-pdp-product-name",
+  "title": "Equine PDP – Product Name",
+  "org": "Redmond",
+  "brandKey": "EQ",
+  "category": ["web", "ecommerce", "template", "pdp"],
+  "path": ["Web", "e-commerce", "Templates", "PDP", "Equine", "Product Name"],
+  "status": "active",
+  "tags": ["pdp", "template"],
+  "thumb": null,
+  "figmaUrl": "https://www.figma.com/design/dYVq82CeMCycsYLC64jqMZ/Redmond-Web-Projects-UX-UI?node-id=17108-13008&t=ejMCLFyC749kbVdp-1",
+  "updatedAt": "2026-01-06"
+}
+
