@@ -24,6 +24,18 @@
     "updatedAt": "2026-01-06"
   },
   {
+    "id": "Equine-Media-Resources",
+    "title": "Media & Resources Page Updated",
+    "org": "Redmond",
+    "brandKey": "EQ",
+    "category": ["Content"],
+    "status": "active",
+    "tags": ["Media", "Content"],
+    "thumb": null,
+    "figmaUrl": "https://www.figma.com/design/dYVq82CeMCycsYLC64jqMZ/Redmond-Web-Projects-UX-UI?node-id=3980-27367&t=lSNPHrEbxTRBV6Y6-1",
+    "updatedAt": "2026-01-06"
+  },
+  {
   "id": "equine-pdp-product-name",
   "title": "Equine PDP – Product Name",
   "org": "Redmond",
