@@ -170,8 +170,12 @@
         placeholder="Search by file name, brand, tags…"
       />
 
+      <select id="p1"></select>
+      <select id="p2"></select>
+      <select id="p3"></select>
+      <select id="p4"></select>
       <select id="brand"></select>
-      <select id="cat"></select>
+
 
       <label class="toggle">
         <input id="activeOnly" type="checkbox" checked />
@@ -209,10 +213,9 @@
       item.brandKey,
       ...(item.tags || []),
       ...(item.category || []),
+      ...(item.path || []),
       item.status
-    ]
-      .map(normalize)
-      .join(' ');
+    ].map(normalize).join(' ');
 
     return haystack.includes(query);
   }
@@ -235,9 +238,9 @@
 
   function cardTemplate(item) {
     const chips = []
-      .concat(item.category || [])
+      .concat((item.path || []).slice(0, 3)) // show first 3 levels for context
       .concat(item.status ? [item.status] : [])
-      .slice(0, 3)
+      .slice(0, 4)
       .map(c => `<span class="chip">${c}</span>`)
       .join('');
 
@@ -249,7 +252,7 @@
             <div class="title" title="${item.title}">
               ${item.title}
             </div>
-            <div class="sub">${item.org}</div>
+            <div class="sub">${item.org} • ${item.brandKey || ''}</div>
             <div class="chips">${chips}</div>
           </div>
         </div>
@@ -271,46 +274,122 @@
     empty.style.display = items.length ? 'none' : 'block';
   }
 
+  function getPathValue(item, idx) {
+    return (item.path && item.path[idx]) ? item.path[idx] : null;
+  }
+
   (async function init() {
     const data = await loadData();
 
-    const brandSel = document.getElementById('brand');
-    const catSel = document.getElementById('cat');
     const qEl = document.getElementById('q');
     const activeOnlyEl = document.getElementById('activeOnly');
 
-    const brands = uniq(data.map(x => x.brandKey).filter(Boolean));
-    const categories = uniq(data.flatMap(x => x.category || []));
+    const p1 = document.getElementById('p1');
+    const p2 = document.getElementById('p2');
+    const p3 = document.getElementById('p3');
+    const p4 = document.getElementById('p4');
 
+    const brandSel = document.getElementById('brand');
+
+    // Build brand options
+    const brands = uniq(data.map(x => x.brandKey).filter(Boolean));
     buildOptions(brandSel, brands, 'All brands');
-    buildOptions(catSel, categories, 'All categories');
+
+    // Build level 1 options (all unique path[0])
+    const level1 = uniq(data.map(x => getPathValue(x, 0)).filter(Boolean));
+    buildOptions(p1, level1, 'All groups');
+
+    function currentFilteredBase() {
+      // This function filters based on chosen path levels progressively
+      const v1 = p1.value;
+      const v2 = p2.value;
+      const v3 = p3.value;
+      const v4 = p4.value;
+
+      return data.filter(item => {
+        if (v1 && getPathValue(item, 0) !== v1) return false;
+        if (v2 && getPathValue(item, 1) !== v2) return false;
+        if (v3 && getPathValue(item, 2) !== v3) return false;
+        if (v4 && getPathValue(item, 3) !== v4) return false;
+        return true;
+      });
+    }
+
+    function refreshCascades(changedLevel) {
+      // Update downstream dropdowns based on current selections
+      const base = currentFilteredBase();
+
+      // If p1 changed, rebuild p2/p3/p4 from items matching p1
+      if (changedLevel <= 1) {
+        const opts2 = uniq(base.map(x => getPathValue(x, 1)).filter(Boolean));
+        buildOptions(p2, opts2, 'All subgroups');
+        p2.value = '';
+      }
+
+      // After p2 rebuild (or if p2 changed), rebuild p3
+      if (changedLevel <= 2) {
+        const base2 = currentFilteredBase();
+        const opts3 = uniq(base2.map(x => getPathValue(x, 2)).filter(Boolean));
+        buildOptions(p3, opts3, 'All types');
+        p3.value = '';
+      }
+
+      // After p3 rebuild (or if p3 changed), rebuild p4
+      if (changedLevel <= 3) {
+        const base3 = currentFilteredBase();
+        const opts4 = uniq(base3.map(x => getPathValue(x, 3)).filter(Boolean));
+        buildOptions(p4, opts4, 'All surfaces');
+        p4.value = '';
+      }
+    }
 
     function applyFilters() {
       const q = normalize(qEl.value);
       const brand = brandSel.value;
-      const cat = catSel.value;
       const activeOnly = activeOnlyEl.checked;
+
+      const v1 = p1.value;
+      const v2 = p2.value;
+      const v3 = p3.value;
+      const v4 = p4.value;
 
       const filtered = data.filter(item => {
         if (activeOnly && item.status !== 'active') return false;
+
         if (brand && item.brandKey !== brand) return false;
-        if (cat && !(item.category || []).includes(cat)) return false;
+
+        // Path filters
+        if (v1 && getPathValue(item, 0) !== v1) return false;
+        if (v2 && getPathValue(item, 1) !== v2) return false;
+        if (v3 && getPathValue(item, 2) !== v3) return false;
+        if (v4 && getPathValue(item, 3) !== v4) return false;
+
         return matches(item, q);
       });
 
       render(filtered);
     }
 
-    [qEl, brandSel, catSel, activeOnlyEl].forEach(el => {
+    // Wire up cascade behavior
+    p1.addEventListener('change', () => { refreshCascades(1); applyFilters(); });
+    p2.addEventListener('change', () => { refreshCascades(2); applyFilters(); });
+    p3.addEventListener('change', () => { refreshCascades(3); applyFilters(); });
+    p4.addEventListener('change', () => { applyFilters(); });
+
+    [qEl, brandSel, activeOnlyEl].forEach(el => {
       el.addEventListener('input', applyFilters);
       el.addEventListener('change', applyFilters);
     });
 
+    // Initialize cascades once
+    refreshCascades(1);
     applyFilters();
+
   })().catch(err => {
     document.getElementById('list').innerHTML =
       `<div class="empty">Error: ${err.message}</div>`;
   });
 </script>
+
 </body>
 </html>
