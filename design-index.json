@@ -1,0 +1,26 @@
+[
+  {
+    "id": "equine-graphics",
+    "title": "Equine Graphics for Web",
+    "org": "Redmond",
+    "brandKey": "EQ",
+    "category": ["graphics"],
+    "status": "active",
+    "tags": ["graphics", "components"],
+    "thumb": null,
+    "figmaUrl": "https://www.figma.com/design/dYVq82CeMCycsYLC64jqMZ/Redmond-Web-Projects-UX-UI?node-id=18882-78861&t=ejMCLFyC749kbVdp-1",
+    "updatedAt": "2026-01-06"
+  },
+  {
+    "id": "equine-landing-pages",
+    "title": "Daily Gold Landing Page",
+    "org": "Redmond",
+    "brandKey": "EQ",
+    "category": ["landing"],
+    "status": "active",
+    "tags": ["landing", "gold", "daily-gold"],
+    "thumb": null,
+    "figmaUrl": "https://www.figma.com/design/dYVq82CeMCycsYLC64jqMZ/Redmond-Web-Projects-UX-UI?node-id=4243-10963&t=ejMCLFyC749kbVdp-1",
+    "updatedAt": "2026-01-06"
+  }
+]
