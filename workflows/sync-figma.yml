@@ -1,0 +1,49 @@
+name: Sync Figma Index
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 9 * * *" # daily at 09:00 UTC (adjust if you want)
+  push:
+    branches: [ "main" ]
+    paths:
+      - "scripts/sync-figma.mjs"
+      - ".github/workflows/sync-figma.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Sync from Figma
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+          FIGMA_TEAM_ID: ${{ secrets.FIGMA_TEAM_ID }}
+          # Optional alternative instead of FIGMA_TEAM_ID:
+          # FIGMA_PROJECT_IDS: ${{ vars.FIGMA_PROJECT_IDS }}
+          # Optional:
+          # PROJECT_NAME_ALLOWLIST: ${{ vars.PROJECT_NAME_ALLOWLIST }}
+          OUTPUT_PATH: design-index.json
+        run: node scripts/sync-figma.mjs
+
+      - name: Commit changes (if any)
+        run: |
+          git config user.name "figma-sync-bot"
+          git config user.email "figma-sync-bot@users.noreply.github.com"
+          git add design-index.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: sync design-index.json from Figma"
+            git push
+          fi
