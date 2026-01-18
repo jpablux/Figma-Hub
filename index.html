@@ -253,7 +253,6 @@ async function loadData() {
 
   function cardTemplate(item) {
     const kind = item.type === "node" ? "node" : "file";
-    const chips = []
      const chips = []
         .concat([kind])
         .concat(item.category || [])
