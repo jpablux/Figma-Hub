@@ -190,11 +190,26 @@
   </div>
 
 <script>
-  async function loadData() {
-    const res = await fetch('./design-index.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to load design-index.json');
-    return res.json();
-  }
+ 
+ async function loadJsonSafe(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function loadData() {
+  const base = await loadJsonSafe("./design-index.json");          // auto (files)
+  const overrides = await loadJsonSafe("./links-overrides.json");  // manual (nodes)
+
+  // Merge + dedupe by id
+  const byId = new Map();
+  [...base, ...overrides].forEach((item) => {
+    if (item && item.id) byId.set(item.id, item);
+  });
+
+  return Array.from(byId.values());
+}
+
 
   function uniq(arr) {
     return [...new Set(arr)].sort((a, b) => a.localeCompare(b));
@@ -237,12 +252,16 @@
   }
 
   function cardTemplate(item) {
+    const kind = item.type === "node" ? "node" : "file";
     const chips = []
-      .concat((item.path || []).slice(0, 3)) // show first 3 levels for context
-      .concat(item.status ? [item.status] : [])
-      .slice(0, 4)
-      .map(c => `<span class="chip">${c}</span>`)
-      .join('');
+     const chips = []
+        .concat([kind])
+        .concat(item.category || [])
+        .concat(item.status ? [item.status] : [])
+        .slice(0, 4)
+        .map(c => `<span class="chip">${c}</span>`)
+        .join('');
+
 
     return `
       <div class="card">
