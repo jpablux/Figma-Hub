@@ -297,11 +297,38 @@ const BRAND_MAP = {
 
 function inferBrandKeyFromTitle(title) {
   const t = normalize(title);
-  if (t.includes("equine")) return "EQ";
-  if (t.includes("re-lyte") || t.includes("relyte")) return "RL";
-  if (t.includes("real salt") || t.includes("realsalt")) return "RS";
+
+  // Equine
+  if (
+    t.includes("equine") ||
+    t.includes("poultice") ||
+    t.includes("daily")
+  ) {
+    return "EQ";
+  }
+  // Agriculture
+  if (t.startsWith("ag ") || t.includes(" ag ") || t.includes("agriculture")) {
+    return "AG";
+  }
+
+  // Living (Re-Lyte / Living)
+  if (
+    t.includes("re-lyte") ||
+    t.includes("relyte") ||
+    t.includes("living")
+  ) {
+    return "RL";
+  }
+
+  // Hunt
+  if (t.includes("hunt") || t.includes("hnt")) return "HNT";
+
+  // Farms
+  if (t.includes("farm") || t.includes("farms")) return "RF";
+
   return null;
 }
+
 
 function sheetRowsToNodeEntries(rows) {
   if (rows.length < 2) return [];
