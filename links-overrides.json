@@ -1,0 +1,17 @@
+[
+  {
+    "id": "eq-equine-collection-daily-gold",
+    "type": "node",
+    "title": "Equine Collection • Daily Gold (Frame/Section)",
+    "org": "Redmond",
+    "brandKey": "EQ",
+    "category": ["web", "ecommerce", "templates"],
+    "path": ["Web", "e-commerce", "Templates", "PDP", "Equine", "Daily Gold"],
+    "status": "active",
+    "tags": ["equine", "pdp", "daily-gold"],
+    "thumb": null,
+    "figmaUrl": "https://www.figma.com/design/dYVq82CeMCycsYLC64jqMZ/Redmond-Web-Projects-UX-UI?node-id=17108-13008&t=ejMCLFyC749kbVdp-1",
+    "updatedAt": "2026-01-17",
+    "parentFileKey": "dYVq82CeMCycsYLC64jqMZ"
+  }
+]
