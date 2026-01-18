@@ -14,4 +14,23 @@
     "updatedAt": "2026-01-17",
     "parentFileKey": "dYVq82CeMCycsYLC64jqMZ"
   }
+
+  {
+    "id": "eq-equine-collection-homepage",
+    "type": "node",
+    "title": "Equine Collection • Home Page",
+    "org": "Redmond",
+    "brandKey": "EQ",
+    "category": ["web", "ecommerce", "Main-Content"],
+    "path": ["Web", "e-commerce", "Main-Content", "Equine"],
+    "status": "active",
+    "tags": ["equine","Home"],
+    "thumb": null,
+    "figmaUrl": "https://www.figma.com/design/PDEtcgCAuN4L1TSGNvTXyB/Equine-Collection?node-id=36-3918&t=wWnE6Tlqn9Cw1XdD-1",
+    "updatedAt": "2026-01-17",
+    "parentFileKey": "PDEtcgCAuN4L1TSGNvTXyB"
+  }
+
+
+  
 ]
