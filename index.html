@@ -197,18 +197,169 @@
   return res.json();
 }
 
-async function loadData() {
-  const base = await loadJsonSafe("./design-index.json");          // auto (files)
-  const overrides = await loadJsonSafe("./links-overrides.json");  // manual (nodes)
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSwVzYykWGRIjis88pAYAqXihJRxBf7Ol0Xv2Z-vywaNAKRr4XWld3Ul2fuCwk6JGFTp7yX2OdBTgDX/pub?gid=0&single=true&output=csv";
 
-  // Merge + dedupe by id
+async function loadJsonSafe(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function loadTextSafe(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return "";
+  return res.text();
+}
+
+// Minimal CSV parser (handles commas + quoted fields)
+function parseCSV(csvText) {
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < csvText.length; i++) {
+    const ch = csvText[i];
+    const next = csvText[i + 1];
+
+    if (ch === '"' && inQuotes && next === '"') {
+      cur += '"';
+      i++;
+    } else if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === "," && !inQuotes) {
+      row.push(cur);
+      cur = "";
+    } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
+      if (ch === "\r" && next === "\n") i++;
+      row.push(cur);
+      cur = "";
+      if (row.some((c) => c.trim() !== "")) rows.push(row);
+      row = [];
+    } else {
+      cur += ch;
+    }
+  }
+
+  row.push(cur);
+  if (row.some((c) => c.trim() !== "")) rows.push(row);
+
+  return rows;
+}
+
+function normalize(val) {
+  return (val || "").toString().toLowerCase().trim();
+}
+
+function slugify(s) {
+  return (s || "")
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function inferParentFileKey(figmaUrl) {
+  if (!figmaUrl) return null;
+  const m = figmaUrl.match(/figma\.com\/(design|file)\/([^\/\?]+)/i);
+  return m ? m[2] : null;
+}
+
+function inferNodeId(figmaUrl) {
+  if (!figmaUrl) return null;
+  const m = figmaUrl.match(/[?&]node-id=([^&]+)/i);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function autoTagsFromTitle(title) {
+  // Simple keyword extraction: split on separators, drop tiny words
+  const stop = new Set(["the", "and", "or", "for", "to", "of", "a", "an"]);
+  return (title || "")
+    .toLowerCase()
+    .split(/[\s•>|/,\-–—:()]+/g)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .filter((t) => t.length >= 3 && !stop.has(t))
+    .slice(0, 12);
+}
+
+// Optional: map brand names in title -> brandKey
+const BRAND_MAP = {
+  equine: "EQ",
+  "re-lyte": "RL",
+  relyte: "RL",
+  "real salt": "RS",
+  realsalt: "RS",
+};
+
+function inferBrandKeyFromTitle(title) {
+  const t = normalize(title);
+  if (t.includes("equine")) return "EQ";
+  if (t.includes("re-lyte") || t.includes("relyte")) return "RL";
+  if (t.includes("real salt") || t.includes("realsalt")) return "RS";
+  return null;
+}
+
+function sheetRowsToNodeEntries(rows) {
+  if (rows.length < 2) return [];
+  const headers = rows[0].map((h) => normalize(h));
+  const idxTitle = headers.indexOf("title");
+  const idxUrl = headers.indexOf("figma_url");
+
+  if (idxTitle === -1 || idxUrl === -1) return [];
+
+  return rows.slice(1).map((r) => {
+    const title = (r[idxTitle] || "").trim();
+    const figmaUrl = (r[idxUrl] || "").trim();
+    if (!title || !figmaUrl) return null;
+
+    const parentFileKey = inferParentFileKey(figmaUrl);
+    const nodeId = inferNodeId(figmaUrl);
+
+    // Generate a stable-ish id: slug(title) + node-id (avoids collisions)
+    const id = `${slugify(title)}${nodeId ? `--${slugify(nodeId)}` : ""}`;
+
+    const brandKey = inferBrandKeyFromTitle(title);
+    const tags = autoTagsFromTitle(title);
+
+    return {
+      id,
+      type: "node",
+      title,
+      org: "Redmond",
+      brandKey,
+      category: [],
+      path: [],
+      status: "active",
+      tags,
+      thumb: null,
+      figmaUrl,
+      updatedAt: new Date().toISOString().slice(0, 10),
+      parentFileKey,
+    };
+  }).filter(Boolean);
+}
+
+  
+async function loadData() {
+  const base = await loadJsonSafe("./design-index.json"); // auto-generated files
+
+  const csv = await loadTextSafe(SHEET_CSV_URL);
+  const rows = csv ? parseCSV(csv) : [];
+  const nodes = sheetRowsToNodeEntries(rows);
+
+  // Merge & dedupe by id
   const byId = new Map();
-  [...base, ...overrides].forEach((item) => {
+  [...base, ...nodes].forEach((item) => {
     if (item && item.id) byId.set(item.id, item);
   });
 
   return Array.from(byId.values());
 }
+
 
 
   function uniq(arr) {
